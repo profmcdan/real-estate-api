@@ -23,5 +23,5 @@ class Apartment(models.Model):
 
 class ApartmentPicture(models.Model):
     apartment = models.ForeignKey(
-        Apartment, on_delete=models.CASCADE, related_name='apartments')
-    image = models.ImageField(upload_to='apartments/')
+        Apartment, on_delete=models.CASCADE, related_name='apartment_pictures')
+    image = models.CharField(max_length=255, null=True)

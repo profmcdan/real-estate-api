@@ -36,7 +36,7 @@ class Query(graphene.ObjectType):
         return get_user_model().objects.all()
 
     def resolve_me(self, info):
-        user = info.context.info or None
+        user = info.context.user or None
         if user.is_anonymous:
             raise GraphQLError('Authentication required')
         return user

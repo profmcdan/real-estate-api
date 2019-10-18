@@ -16,7 +16,9 @@ class Agent(models.Model):
 class Apartment(models.Model):
     agent = models.ForeignKey(
         Agent, on_delete=models.CASCADE, related_name='apartments')
+    title = models.CharField(max_length=255, null=True)
     address = models.TextField()
+    features = models.TextField(null=True)
 
 
 class ApartmentPicture(models.Model):

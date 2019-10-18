@@ -108,30 +108,56 @@ class CreateApartment(graphene.Mutation):
                                title=apartment.title)
 
 
+class AddApartmentImage(graphene.Mutation):
+    id = graphene.Int()
+    apartment = graphene.Field(ApartmentType)
+    image = graphene.String()
+
+    class Arguments:
+        apartmentId = graphene.Int()
+        image = graphene.String()
+
+    def mutate(self, info, **request_data):
+        user = info.context.user or None
+        if user.is_anonymous:
+            raise GraphQLError('Authentication credentials not provided')
+        apartmentId = request_data.get('apartmentId')
+        image = request_data.get('image')
+        apartment = Apartment.objects.filter(id=apartmentId).first()
+        if not apartment:
+            raise GraphQLError('Appartment with that Id does not exist')
+        if apartment.agent.user != user:
+            raise GraphQLError(
+                'This apartment does not belong to you, hence you cant edit it')
+        apartmentPicture = ApartmentPicture(apartment=apartment, image=image)
+        apartmentPicture.save()
+        return AddApartmentImage(id=apartmentPicture.id, apartment=apartment, image=image)
+
+
 class Mutation(graphene.ObjectType):
     create_agent = CreateAgent.Field()
     create_apartment = CreateApartment.Field()
+    add_apartment_image = AddApartmentImage.Field()
 
 
 class Query(graphene.ObjectType):
     agents = graphene.List(AgentType, search=graphene.String(),
                            first=graphene.Int(), skip=graphene.Int())
-    apartments = graphene.List(ApartmentType, search=graphene.String(),
-                               first=graphene.Int(), skip=graphene.Int())
-    apartment = graphene.Field(ApartmentType, apartmentId=graphene.Int())
+    apartments = graphene.List(ApartmentType, apartmentId=graphene.Int(),
+                               search=graphene.String(), first=graphene.Int(),
+                               skip=graphene.Int())
 
     def resolve_agents(self, info, search=None, first=None, skip=None, **kwargs):
         """ Returns a paginated list of Agents """
         qs = Agent.objects.all()
         return resolve_with_filter_and_pagination(qs, search, first, skip)
 
-    def resolve_apartments(self, info, search=None, first=None, skip=None, **kwargs):
+    def resolve_apartments(self, info,  apartmentId=None, search=None, first=None, skip=None, **kwargs):
         """ Returns a paginated list of Apartments """
         qs = Apartment.objects.all()
+        if apartmentId:
+            apartment = qs.filter(id=apartmentId)
+            if not apartment:
+                raise GraphQLError('Apartment not found')
+            return apartment
         return resolve_with_filter_and_pagination(qs, search, first, skip)
-
-    def resolve_apartment(self, info, apartmentId=None):
-        apartment = Apartment.objects.filter(id=apartmentId).first()
-        if not apartment:
-            raise GraphQLError('Apartment not found')
-        return apartment

@@ -10,6 +10,7 @@ class Agent(models.Model):
     address = models.TextField()
     phone = models.CharField(max_length=30)
     whatsapp_number = models.CharField(max_length=30)
+    picture = models.CharField(max_length=255, null=True, blank=True)
 
 
 class Apartment(models.Model):

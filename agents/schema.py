@@ -136,19 +136,21 @@ class AddApartmentImage(graphene.Mutation):
 
 class DeleteApartmentImage(graphene.Mutation):
     success = graphene.Boolean()
+    # imageId = graphene.Int(required=True)
+    # apartmentImage = graphene.Field(ApartmentPictureType)
 
     class Arguments:
         imageId = graphene.Int(required=True)
 
     def mutate(self, info, imageId=None):
-        self.success = False
         if not imageId:
             raise GraphQLError('Apartment Id does not exists')
-        image = ApartmentPicture.objects.filter(id=imageId).first()
-        if not image:
+        apartmentImage = ApartmentPicture.objects.filter(id=imageId).first()
+        if not apartmentImage:
             raise GraphQLError('Image does not exists')
-        image.delete()
-        return DeleteApartmentImage(success=True)
+        apartmentImage.delete()
+        success = True
+        return DeleteApartmentImage(success=success)
 
 
 class Mutation(graphene.ObjectType):
